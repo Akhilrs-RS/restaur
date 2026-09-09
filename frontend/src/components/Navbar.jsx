@@ -18,11 +18,9 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
         <div className="brand-logo">
           <UtensilsCrossed size={22} />
         </div>
-        <div>
           <div className="brand-name">
-            Claude Kitchen
+            Royal Spices
           </div>
-        </div>
       </div>
 
       {/* Main Navigation Tabs */}
@@ -79,14 +77,6 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
 
       {/* Right Controls */}
       <div className="header-actions">
-        <div className="live-indicator" title={isConnected ? "SignalR Real-Time Connected" : "Connecting to SignalR..."}>
-          {isConnected && (
-            <>
-              <div className="live-pulse-dot" />
-              <span>Real-Time Sync</span>
-            </>
-          )}
-        </div>
       </div>
     </header>
   );
