@@ -1288,7 +1288,7 @@ body {
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    background: #000000 !important;
+    background: #ffffff !important;
   }
   body * {
     visibility: hidden !important;
@@ -1304,8 +1304,8 @@ body {
     box-shadow: none !important;
     padding: 4mm 3mm !important;
     margin: 0 !important;
-    color: #ffffff !important;
-    background: #000000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
   }
   .thermal-receipt-container::after {
     display: none !important;
