@@ -162,7 +162,7 @@ export default function BillingView({ onBillSettled }) {
                   className={`cart-item-row ${isSelected ? 'selected' : ''}`}
                   style={{ 
                     cursor: 'pointer',
-                    background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'rgba(0, 0, 0, 0.02)',
                     borderColor: isSelected ? 'var(--primary)' : 'var(--border-subtle)',
                     padding: 14
                   }}
@@ -257,7 +257,7 @@ export default function BillingView({ onBillSettled }) {
           </div>
 
           {/* Subtotal / Tax / Total Box */}
-          <div style={{ background: 'rgba(0, 0, 0, 0.2)', padding: 16, borderRadius: 8, border: '1px solid var(--border-subtle)', maxWidth: 400, marginLeft: 'auto', width: '100%' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.2)', padding: 16, borderRadius: 8, border: '1px solid var(--border-subtle)', maxWidth: 400, marginLeft: 'auto', width: '100%' }}>
             <div className="cart-totals-row">
               <span>Subtotal</span>
               <span style={{ fontFamily: 'var(--font-family-mono)' }}>₹{selectedBill.subTotal.toFixed(2)}</span>
@@ -277,7 +277,7 @@ export default function BillingView({ onBillSettled }) {
           </div>
 
           {/* Split Bill Section */}
-          <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 18, borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
+          <div style={{ background: 'rgba(0, 0, 0, 0.02)', padding: 18, borderRadius: 10, border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '15px', color: 'var(--text-white)', marginBottom: 12 }}>
               <Users size={18} color="var(--primary)" />
               Split Bill Calculator
@@ -405,7 +405,7 @@ export default function BillingView({ onBillSettled }) {
               </div>
 
               {/* Totals Summary */}
-              <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: 14, borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.25)', padding: 14, borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
                 {discountPercent > 0 && (
                   <div className="cart-totals-row" style={{ color: 'var(--accent-rose)' }}>
                     <span>Discount ({discountPercent}%)</span>
@@ -445,8 +445,8 @@ export default function BillingView({ onBillSettled }) {
 
               {/* UPI QR Mock */}
               {payMethod === 2 && (
-                <div style={{ textAlign: 'center', padding: 16, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
-                  <QrCode size={90} style={{ margin: '0 auto 8px', color: 'white' }} />
+                <div style={{ textAlign: 'center', padding: 16, background: 'rgba(0, 0, 0, 0.05)', borderRadius: 8 }}>
+                  <QrCode size={90} style={{ margin: '0 auto 8px', color: 'black' }} />
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                     Scan with UPI / Digital Wallet App to Pay ₹{finalTotal.toFixed(2)}
                   </div>

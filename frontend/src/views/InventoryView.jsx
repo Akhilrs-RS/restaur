@@ -151,7 +151,7 @@ export default function InventoryView() {
             <DollarSign size={24} />
           </div>
           <div>
-            <div className="stat-val">${totalValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div className="stat-val">₹{totalValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <div className="stat-label">Total Inventory Valuation</div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function InventoryView() {
             <TrendingDown size={24} />
           </div>
           <div>
-            <div className="stat-val">${totalWastageLoss.toFixed(2)}</div>
+            <div className="stat-val">₹{totalWastageLoss.toFixed(2)}</div>
             <div className="stat-label">Loss to Kitchen Wastage</div>
           </div>
         </div>
@@ -266,9 +266,9 @@ export default function InventoryView() {
                     <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--text-dim)' }}>
                       {item.reorderLevel.toLocaleString()} {item.unit}
                     </td>
-                    <td style={{ fontFamily: 'var(--font-family-mono)' }}>${item.costPerUnit.toFixed(3)}</td>
+                    <td style={{ fontFamily: 'var(--font-family-mono)' }}>₹{item.costPerUnit.toFixed(3)}</td>
                     <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                      ${item.totalValue.toFixed(2)}
+                      ₹{item.totalValue.toFixed(2)}
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>{item.supplierName}</td>
                     <td>
@@ -331,7 +331,7 @@ export default function InventoryView() {
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--text-white)' }}>{dish.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--accent-emerald)', fontFamily: 'var(--font-family-mono)' }}>
-                    Menu Price: ${dish.price.toFixed(2)}
+                    Menu Price: ₹{dish.price.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -373,10 +373,10 @@ export default function InventoryView() {
                             {recipe.quantityRequired} {ing?.unit}
                           </td>
                           <td style={{ fontFamily: 'var(--font-family-mono)' }}>
-                            ${ing?.costPerUnit.toFixed(3)}
+                            ₹{ing?.costPerUnit.toFixed(3)}
                           </td>
                           <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                            ${portionCost.toFixed(2)}
+                            ₹{portionCost.toFixed(2)}
                           </td>
                         </tr>
                       );
@@ -423,7 +423,7 @@ export default function InventoryView() {
                   <td style={{ fontWeight: 600, color: 'var(--text-white)' }}>{t.ingredientName}</td>
                   <td style={{ fontFamily: 'var(--font-family-mono)' }}>{t.quantity} {t.unit}</td>
                   <td style={{ fontFamily: 'var(--font-family-mono)', color: t.type === 'Wastage' ? 'var(--accent-rose)' : 'var(--text-main)' }}>
-                    ${t.totalCost.toFixed(2)}
+                    ₹{t.totalCost.toFixed(2)}
                   </td>
                   <td style={{ color: 'var(--text-muted)' }}>{t.reason}</td>
                 </tr>
@@ -481,7 +481,7 @@ export default function InventoryView() {
 
                 {wasteQty && parseFloat(wasteQty) > 0 && (
                   <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: 6, color: 'var(--accent-rose)', fontSize: '13px' }}>
-                    Direct Cost Loss: ${(parseFloat(wasteQty) * selectedIngredient.costPerUnit).toFixed(2)}
+                    Direct Cost Loss: ₹{(parseFloat(wasteQty) * selectedIngredient.costPerUnit).toFixed(2)}
                   </div>
                 )}
               </div>
@@ -490,7 +490,7 @@ export default function InventoryView() {
                 <button type="button" className="btn-bump served" onClick={() => setShowWastageModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-bump ready" style={{ background: 'var(--accent-rose)', color: 'white' }}>
+                <button type="submit" className="btn-bump ready" style={{ background: 'var(--accent-rose)', color: 'black' }}>
                   Log Wastage
                 </button>
               </div>
@@ -531,7 +531,7 @@ export default function InventoryView() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Cost Per Unit ($)</label>
+                  <label className="form-label">Cost Per Unit (₹)</label>
                   <input 
                     type="number" 
                     step="any"
@@ -605,7 +605,7 @@ export default function InventoryView() {
                           <td style={{ fontFamily: 'var(--font-family-mono)' }}>{s.reorderLevel} {s.unit}</td>
                           <td style={{ fontFamily: 'var(--font-family-mono)', fontWeight: 700, color: 'var(--primary)' }}>{s.suggestedQuantity} {s.unit}</td>
                           <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{s.supplierName}</td>
-                          <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--accent-emerald)', fontWeight: 600 }}>${s.estimatedCost.toFixed(2)}</td>
+                          <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--accent-emerald)', fontWeight: 600 }}>₹{s.estimatedCost.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -615,7 +615,7 @@ export default function InventoryView() {
 
               {poSuggestions.length > 0 && (
                 <div style={{ marginTop: 14, textAlign: 'right', fontSize: '15px', fontWeight: 700, color: 'var(--text-white)' }}>
-                  Total Estimated PO Cost: <span style={{ color: 'var(--accent-emerald)', fontFamily: 'var(--font-family-mono)' }}>${poTotalCost.toFixed(2)}</span>
+                  Total Estimated PO Cost: <span style={{ color: 'var(--accent-emerald)', fontFamily: 'var(--font-family-mono)' }}>₹{poTotalCost.toFixed(2)}</span>
                 </div>
               )}
             </div>

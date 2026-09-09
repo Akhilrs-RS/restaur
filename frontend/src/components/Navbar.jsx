@@ -5,21 +5,11 @@ import {
   Package, 
   Receipt, 
   BarChart3, 
-  Volume2, 
-  VolumeX, 
-  Wifi, 
-  WifiOff 
+  Wifi
 } from 'lucide-react';
-import { toggleAudioMute, getAudioMuteState, playBumpClick } from '../services/sound';
+import { playBumpClick } from '../services/sound';
 
 export default function Navbar({ activeTab, setActiveTab, activeTicketCount, lowStockCount, unpaidBillsCount, isConnected }) {
-  const [muted, setMuted] = useState(getAudioMuteState());
-
-  const handleMuteToggle = () => {
-    const isNowMuted = toggleAudioMute();
-    setMuted(isNowMuted);
-    if (!isNowMuted) playBumpClick();
-  };
 
   return (
     <header className="app-header">
@@ -30,7 +20,7 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
         </div>
         <div>
           <div className="brand-name">
-            RestoPulse <span className="brand-tag">PRO ERP</span>
+            Claude Kitchen
           </div>
         </div>
       </div>
@@ -90,26 +80,13 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
       {/* Right Controls */}
       <div className="header-actions">
         <div className="live-indicator" title={isConnected ? "SignalR Real-Time Connected" : "Connecting to SignalR..."}>
-          {isConnected ? (
+          {isConnected && (
             <>
               <div className="live-pulse-dot" />
               <span>Real-Time Sync</span>
             </>
-          ) : (
-            <>
-              <WifiOff size={14} color="var(--accent-rose)" />
-              <span style={{ color: 'var(--accent-rose)' }}>Reconnecting</span>
-            </>
           )}
         </div>
-
-        <button 
-          className="icon-btn" 
-          onClick={handleMuteToggle}
-          title={muted ? "Unmute Kitchen Chimes" : "Mute Kitchen Chimes"}
-        >
-          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
       </div>
     </header>
   );

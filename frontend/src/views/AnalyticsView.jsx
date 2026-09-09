@@ -74,7 +74,7 @@ export default function AnalyticsView() {
             <DollarSign size={24} />
           </div>
           <div>
-            <div className="stat-val">${stats.totalRevenue.toFixed(2)}</div>
+            <div className="stat-val">₹{stats.totalRevenue.toFixed(2)}</div>
             <div className="stat-label">Total Settled Revenue</div>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function AnalyticsView() {
             <TrendingDown size={24} />
           </div>
           <div>
-            <div className="stat-val">${stats.totalWastageCost.toFixed(2)}</div>
+            <div className="stat-val">₹{stats.totalWastageCost.toFixed(2)}</div>
             <div className="stat-label">Culinary Wastage Loss</div>
           </div>
         </div>
@@ -121,14 +121,14 @@ export default function AnalyticsView() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {stats.stationLoad.map(st => (
-              <div key={st.station} style={{ padding: 12, background: 'rgba(255, 255, 255, 0.02)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
+              <div key={st.station} style={{ padding: 12, background: 'rgba(0, 0, 0, 0.02)', borderRadius: 8, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, color: 'var(--text-white)' }}>{st.station} Station</span>
                   <span style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--primary)', fontWeight: 700 }}>
                     {st.activeItems} Active Items
                   </span>
                 </div>
-                <div style={{ height: 6, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: 'rgba(0, 0, 0, 0.08)', borderRadius: 3, overflow: 'hidden' }}>
                   <div 
                     style={{ 
                       height: '100%', 
@@ -168,7 +168,7 @@ export default function AnalyticsView() {
                     </td>
                     <td style={{ fontFamily: 'var(--font-family-mono)', fontWeight: 700 }}>{dish.totalSold} sold</td>
                     <td style={{ fontFamily: 'var(--font-family-mono)', color: 'var(--accent-emerald)', fontWeight: 700 }}>
-                      ${dish.revenue.toFixed(2)}
+                      ₹{dish.revenue.toFixed(2)}
                     </td>
                   </tr>
                 ))}

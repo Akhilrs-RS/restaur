@@ -314,7 +314,7 @@ export default function KdsView({ activeStation = 'Expo' }) {
                       alignItems: 'center', 
                       justifyContent: 'space-between', 
                       padding: 14, 
-                      background: 'rgba(255, 255, 255, 0.03)', 
+                      background: 'rgba(0, 0, 0, 0.03)', 
                       borderRadius: 8, 
                       border: '1px solid var(--border-subtle)',
                       marginBottom: 10 

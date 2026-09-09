@@ -13,7 +13,7 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddDbContext<RestaurantDbContext>(options =>
-    options.UseSqlite("Data Source=restopulse.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSignalR();
 
