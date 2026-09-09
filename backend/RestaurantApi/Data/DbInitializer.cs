@@ -9,6 +9,23 @@ public static class DbInitializer
     {
         await context.Database.EnsureCreatedAsync();
 
+        // Ensure columns exist on Orders table for existing databases
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(@"
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""DeliveryProvider"" integer NOT NULL DEFAULT 0;
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""DeliveryAddress"" text NOT NULL DEFAULT '';
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""DeliveryFee"" numeric NOT NULL DEFAULT 0;
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""ChannelOrderId"" text NOT NULL DEFAULT '';
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""RiderName"" text NOT NULL DEFAULT '';
+                ALTER TABLE ""Orders"" ADD COLUMN IF NOT EXISTS ""RiderPhone"" text NOT NULL DEFAULT '';
+            ");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DB column migration notice: {ex.Message}");
+        }
+
         if (await context.Categories.AnyAsync())
         {
             return; // DB has already been seeded

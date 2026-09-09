@@ -15,6 +15,13 @@ public enum OrderType
     Delivery = 2
 }
 
+public enum DeliveryProvider
+{
+    None = 0,
+    Direct = 1,
+    Swiggy = 2
+}
+
 public enum OrderStatus
 {
     Pending = 0,

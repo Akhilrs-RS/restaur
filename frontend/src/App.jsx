@@ -5,6 +5,7 @@ import KdsView from './views/KdsView';
 import InventoryView from './views/InventoryView';
 import BillingView from './views/BillingView';
 import AnalyticsView from './views/AnalyticsView';
+import ReportsView from './views/ReportsView';
 import { signalRService } from './services/signalr';
 import { api } from './services/api';
 import './styles/design-system.css';
@@ -99,6 +100,9 @@ export default function App() {
         )}
         {activeTab === 'analytics' && (
           <AnalyticsView />
+        )}
+        {activeTab === 'reports' && (
+          <ReportsView />
         )}
       </main>
     </div>

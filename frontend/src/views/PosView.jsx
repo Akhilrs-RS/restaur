@@ -12,7 +12,13 @@ import {
   Sparkles,
   Layers,
   ChefHat,
-  UtensilsCrossed
+  UtensilsCrossed,
+  ShoppingBag,
+  Bike,
+  Truck,
+  MapPin,
+  Phone,
+  RefreshCw
 } from 'lucide-react';
 import { api } from '../services/api';
 import { playBumpClick, playKitchenChime } from '../services/sound';
@@ -26,10 +32,16 @@ export default function PosView({ onOrderSent }) {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Cart & Order Details
-  const [orderType, setOrderType] = useState('DineIn');
+  // Multi-Channel Order Details: 'DineIn' | 'Takeaway' | 'Swiggy' | 'DirectDelivery'
+  const [orderChannel, setOrderChannel] = useState('DineIn');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState(30);
+  const [swiggyOrderId, setSwiggyOrderId] = useState(() => `SWG-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [riderName, setRiderName] = useState('');
+  const [riderPhone, setRiderPhone] = useState('');
+  const [pickupMinutes, setPickupMinutes] = useState(15);
   const [orderNotes, setOrderNotes] = useState('');
   const [isPriority, setIsPriority] = useState(false);
   const [cart, setCart] = useState([]);
@@ -79,7 +91,23 @@ export default function PosView({ onOrderSent }) {
   const handleTableClick = (table) => {
     playBumpClick();
     setSelectedTable(table);
-    setOrderType('DineIn');
+    setOrderChannel('DineIn');
+  };
+
+  const handleChannelSelect = (channel) => {
+    playBumpClick();
+    setOrderChannel(channel);
+    if (channel !== 'DineIn') {
+      setSelectedTable(null);
+    }
+    if (channel === 'Swiggy' && !swiggyOrderId) {
+      setSwiggyOrderId(`SWG-${Math.floor(1000 + Math.random() * 9000)}`);
+    }
+  };
+
+  const generateNewSwiggyId = () => {
+    playBumpClick();
+    setSwiggyOrderId(`SWG-${Math.floor(1000 + Math.random() * 9000)}`);
   };
 
   const handleOpenModifierModal = (item) => {
@@ -147,19 +175,48 @@ export default function PosView({ onOrderSent }) {
   // Calculations
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const tax = Math.round(subtotal * 0.05 * 100) / 100; // 5% GST
-  const total = Math.round((subtotal + tax) * 100) / 100;
+  const activeDeliveryFee = orderChannel === 'DirectDelivery' ? parseFloat(deliveryFee || 0) : 0;
+  const total = Math.round((subtotal + tax + activeDeliveryFee) * 100) / 100;
 
   const handleSendToKitchen = async () => {
     if (cart.length === 0) return;
     setIsSubmitting(true);
 
     try {
+      let backendType = 0; // DineIn
+      let backendProvider = 0; // None
+
+      if (orderChannel === 'Takeaway') {
+        backendType = 1;
+        backendProvider = 0;
+      } else if (orderChannel === 'Swiggy') {
+        backendType = 2; // Delivery
+        backendProvider = 2; // Swiggy
+      } else if (orderChannel === 'DirectDelivery') {
+        backendType = 2; // Delivery
+        backendProvider = 1; // Direct
+      }
+
+      let finalCustomerName = customerName.trim();
+      if (!finalCustomerName) {
+        if (orderChannel === 'DineIn') finalCustomerName = selectedTable ? `Table ${selectedTable.tableNumber}` : 'Dine-In Guest';
+        else if (orderChannel === 'Takeaway') finalCustomerName = 'Takeaway Guest';
+        else if (orderChannel === 'Swiggy') finalCustomerName = 'Swiggy Customer';
+        else finalCustomerName = 'Direct Delivery Customer';
+      }
+
       const orderPayload = {
-        tableId: orderType === 'DineIn' ? selectedTable?.id : null,
-        type: orderType === 'DineIn' ? 0 : (orderType === 'Takeaway' ? 1 : 2),
-        customerName: customerName || (selectedTable ? `Table ${selectedTable.tableNumber}` : 'Guest'),
+        tableId: orderChannel === 'DineIn' ? selectedTable?.id : null,
+        type: backendType,
+        deliveryProvider: backendProvider,
+        customerName: finalCustomerName,
         customerPhone,
-        notes: orderNotes,
+        deliveryAddress: (orderChannel === 'Swiggy' || orderChannel === 'DirectDelivery') ? deliveryAddress : '',
+        deliveryFee: activeDeliveryFee,
+        channelOrderId: orderChannel === 'Swiggy' ? swiggyOrderId : '',
+        riderName: (orderChannel === 'Swiggy' || orderChannel === 'DirectDelivery') ? riderName : '',
+        riderPhone: orderChannel === 'DirectDelivery' ? riderPhone : '',
+        notes: orderNotes ? (orderChannel === 'Takeaway' ? `[Pickup ~${pickupMinutes}m] ${orderNotes}` : orderNotes) : (orderChannel === 'Takeaway' ? `Takeaway pickup in ~${pickupMinutes}m` : ''),
         isPriority,
         items: cart.map(c => ({
           menuItemId: c.menuItemId,
@@ -175,6 +232,14 @@ export default function PosView({ onOrderSent }) {
       setSuccessNotice(`Order #${result.orderNumber} fired to kitchen!`);
       setCart([]);
       setOrderNotes('');
+      setDeliveryAddress('');
+      setRiderName('');
+      setRiderPhone('');
+      setCustomerName('');
+      setCustomerPhone('');
+      if (orderChannel === 'Swiggy') {
+        setSwiggyOrderId(`SWG-${Math.floor(1000 + Math.random() * 9000)}`);
+      }
       setIsPriority(false);
       loadData(); // reload table statuses
 
@@ -297,50 +362,284 @@ export default function PosView({ onOrderSent }) {
         <div className="cart-header">
           <div className="cart-title">
             <span>Ticket Cart</span>
-            {selectedTable && (
+            {orderChannel === 'DineIn' && selectedTable && (
               <span className="ticket-table-badge">Table {selectedTable.tableNumber}</span>
+            )}
+            {orderChannel === 'Takeaway' && (
+              <span className="ticket-channel-badge takeaway">
+                <ShoppingBag size={11} /> Takeaway
+              </span>
+            )}
+            {orderChannel === 'Swiggy' && (
+              <span className="ticket-channel-badge swiggy">
+                <Bike size={11} /> {swiggyOrderId}
+              </span>
+            )}
+            {orderChannel === 'DirectDelivery' && (
+              <span className="ticket-channel-badge direct">
+                <Truck size={11} /> Direct Delivery
+              </span>
             )}
           </div>
 
-          {/* Order Type Toggle */}
-          <div className="order-type-selector">
-            {['DineIn', 'Takeaway', 'Delivery'].map(type => (
-              <button 
-                key={type}
-                className={`order-type-btn ${orderType === type ? 'active' : ''}`}
-                onClick={() => { setOrderType(type); playBumpClick(); }}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-
-          {/* Guest Info */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <input 
-              type="text" 
-              placeholder="Guest Name / Cover" 
-              className="form-input" 
-              style={{ flex: 1, padding: '6px 10px', fontSize: '12px' }}
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
+          {/* Order Channel Selector */}
+          <div className="order-channel-selector">
             <button 
               type="button"
-              className={`icon-btn ${isPriority ? 'active' : ''}`}
-              style={{ 
-                width: 'auto', 
-                padding: '0 8px', 
-                background: isPriority ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                borderColor: isPriority ? 'var(--accent-rose)' : 'var(--border-subtle)',
-                color: isPriority ? 'var(--accent-rose)' : 'var(--text-muted)'
-              }}
-              onClick={() => { setIsPriority(!isPriority); playBumpClick(); }}
-              title="Toggle High Priority / Rush Order"
+              className={`order-channel-btn ${orderChannel === 'DineIn' ? 'active channel-dinein' : ''}`}
+              onClick={() => handleChannelSelect('DineIn')}
             >
-              <Sparkles size={14} style={{ marginRight: 4 }} /> VIP Rush
+              <UtensilsCrossed size={14} />
+              <span>Dine-In</span>
+            </button>
+            <button 
+              type="button"
+              className={`order-channel-btn ${orderChannel === 'Takeaway' ? 'active channel-takeaway' : ''}`}
+              onClick={() => handleChannelSelect('Takeaway')}
+            >
+              <ShoppingBag size={14} />
+              <span>Takeaway</span>
+            </button>
+            <button 
+              type="button"
+              className={`order-channel-btn ${orderChannel === 'Swiggy' ? 'active channel-swiggy' : ''}`}
+              onClick={() => handleChannelSelect('Swiggy')}
+            >
+              <Bike size={14} />
+              <span>Swiggy</span>
+            </button>
+            <button 
+              type="button"
+              className={`order-channel-btn ${orderChannel === 'DirectDelivery' ? 'active channel-direct' : ''}`}
+              onClick={() => handleChannelSelect('DirectDelivery')}
+            >
+              <Truck size={14} />
+              <span>Direct</span>
             </button>
           </div>
+
+          {/* Channel Specific Inputs */}
+          {orderChannel === 'DineIn' && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <input 
+                type="text" 
+                placeholder="Guest Name / Cover (Optional)" 
+                className="form-input" 
+                style={{ flex: 1, padding: '6px 10px', fontSize: '12px' }}
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+              <button 
+                type="button"
+                className={`icon-btn ${isPriority ? 'active' : ''}`}
+                style={{ 
+                  width: 'auto', 
+                  padding: '0 8px', 
+                  background: isPriority ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                  borderColor: isPriority ? 'var(--accent-rose)' : 'var(--border-subtle)',
+                  color: isPriority ? 'var(--accent-rose)' : 'var(--text-muted)'
+                }}
+                onClick={() => { setIsPriority(!isPriority); playBumpClick(); }}
+                title="Toggle High Priority / Rush Order"
+              >
+                <Sparkles size={14} style={{ marginRight: 4 }} /> VIP Rush
+              </button>
+            </div>
+          )}
+
+          {orderChannel === 'Takeaway' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10, padding: 8, background: 'rgba(139, 92, 246, 0.06)', borderRadius: 6, border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input 
+                  type="text" 
+                  placeholder="Customer Name" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Mobile Number" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Pickup Est:</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[10, 15, 20, 30].map(mins => (
+                    <button
+                      key={mins}
+                      type="button"
+                      className={`section-chip ${pickupMinutes === mins ? 'active' : ''}`}
+                      style={{ padding: '2px 6px', fontSize: '10px' }}
+                      onClick={() => setPickupMinutes(mins)}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  type="button"
+                  className={`icon-btn ${isPriority ? 'active' : ''}`}
+                  style={{ 
+                    width: 'auto', 
+                    padding: '2px 6px', 
+                    fontSize: '11px',
+                    background: isPriority ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                    borderColor: isPriority ? 'var(--accent-rose)' : 'var(--border-subtle)',
+                    color: isPriority ? 'var(--accent-rose)' : 'var(--text-muted)'
+                  }}
+                  onClick={() => { setIsPriority(!isPriority); playBumpClick(); }}
+                >
+                  <Sparkles size={11} style={{ marginRight: 2 }} /> Rush
+                </button>
+              </div>
+            </div>
+          )}
+
+          {orderChannel === 'Swiggy' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10, padding: 8, background: 'rgba(252, 128, 25, 0.06)', borderRadius: 6, border: '1px solid rgba(252, 128, 25, 0.2)' }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input 
+                  type="text" 
+                  placeholder="Swiggy Order ID" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px', fontWeight: 600, color: '#ea580c' }}
+                  value={swiggyOrderId}
+                  onChange={(e) => setSwiggyOrderId(e.target.value)}
+                />
+                <button 
+                  type="button" 
+                  className="icon-btn" 
+                  title="Generate new Swiggy ID" 
+                  style={{ width: 28, height: 28 }}
+                  onClick={generateNewSwiggyId}
+                >
+                  <RefreshCw size={12} />
+                </button>
+                <button 
+                  type="button"
+                  className={`icon-btn ${isPriority ? 'active' : ''}`}
+                  style={{ 
+                    width: 'auto', 
+                    padding: '2px 6px', 
+                    fontSize: '11px',
+                    background: isPriority ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                    borderColor: isPriority ? 'var(--accent-rose)' : 'var(--border-subtle)',
+                    color: isPriority ? 'var(--accent-rose)' : 'var(--text-muted)'
+                  }}
+                  onClick={() => { setIsPriority(!isPriority); playBumpClick(); }}
+                >
+                  <Sparkles size={11} style={{ marginRight: 2 }} /> Rush
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input 
+                  type="text" 
+                  placeholder="Customer Name" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Customer Phone" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Delivery Address" 
+                className="form-input" 
+                style={{ width: '100%', padding: '5px 8px', fontSize: '12px' }}
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
+              />
+              <input 
+                type="text" 
+                placeholder="Swiggy Valet / Rider Name (Optional)" 
+                className="form-input" 
+                style={{ width: '100%', padding: '5px 8px', fontSize: '12px' }}
+                value={riderName}
+                onChange={(e) => setRiderName(e.target.value)}
+              />
+            </div>
+          )}
+
+          {orderChannel === 'DirectDelivery' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10, padding: 8, background: 'rgba(16, 185, 129, 0.06)', borderRadius: 6, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input 
+                  type="text" 
+                  placeholder="Customer Name" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Customer Phone" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '5px 8px', fontSize: '12px' }}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Full Delivery Address & Landmark" 
+                className="form-input" 
+                style={{ width: '100%', padding: '5px 8px', fontSize: '12px' }}
+                value={deliveryAddress}
+                onChange={(e) => setDeliveryAddress(e.target.value)}
+              />
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fee ₹:</span>
+                  <input 
+                    type="number" 
+                    placeholder="Fee" 
+                    className="form-input" 
+                    style={{ width: 65, padding: '4px 6px', fontSize: '12px' }}
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(e.target.value)}
+                  />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Assigned Rider" 
+                  className="form-input" 
+                  style={{ flex: 1, padding: '4px 6px', fontSize: '12px' }}
+                  value={riderName}
+                  onChange={(e) => setRiderName(e.target.value)}
+                />
+                <button 
+                  type="button"
+                  className={`icon-btn ${isPriority ? 'active' : ''}`}
+                  style={{ 
+                    width: 'auto', 
+                    padding: '2px 6px', 
+                    fontSize: '11px',
+                    background: isPriority ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                    borderColor: isPriority ? 'var(--accent-rose)' : 'var(--border-subtle)',
+                    color: isPriority ? 'var(--accent-rose)' : 'var(--text-muted)'
+                  }}
+                  onClick={() => { setIsPriority(!isPriority); playBumpClick(); }}
+                >
+                  <Sparkles size={11} style={{ marginRight: 2 }} /> Rush
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Notification Toast */}
@@ -423,6 +722,12 @@ export default function PosView({ onOrderSent }) {
             <span>GST (5%)</span>
             <span style={{ fontFamily: 'var(--font-family-mono)' }}>₹{tax.toFixed(2)}</span>
           </div>
+          {orderChannel === 'DirectDelivery' && activeDeliveryFee > 0 && (
+            <div className="cart-totals-row">
+              <span>Delivery Charge</span>
+              <span style={{ fontFamily: 'var(--font-family-mono)' }}>₹{activeDeliveryFee.toFixed(2)}</span>
+            </div>
+          )}
           <div className="cart-totals-row grand-total">
             <span>Total</span>
             <span style={{ color: 'var(--accent-emerald)' }}>₹{total.toFixed(2)}</span>

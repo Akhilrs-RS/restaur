@@ -87,6 +87,13 @@ public class Order
     public string Notes { get; set; } = string.Empty;
     public bool IsPriority { get; set; } = false;
 
+    public DeliveryProvider DeliveryProvider { get; set; } = DeliveryProvider.None;
+    public string DeliveryAddress { get; set; } = string.Empty;
+    public decimal DeliveryFee { get; set; } = 0m;
+    public string ChannelOrderId { get; set; } = string.Empty;
+    public string RiderName { get; set; } = string.Empty;
+    public string RiderPhone { get; set; } = string.Empty;
+
     public List<OrderItem> Items { get; set; } = new();
 }
 

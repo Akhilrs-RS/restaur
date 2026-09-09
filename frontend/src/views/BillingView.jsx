@@ -11,7 +11,11 @@ import {
   CheckCircle2, 
   Clock, 
   ArrowRight,
-  DollarSign
+  DollarSign,
+  ShoppingBag,
+  Bike,
+  Truck,
+  MapPin
 } from 'lucide-react';
 import { api } from '../services/api';
 import { playBumpClick, playCashRegister } from '../services/sound';
@@ -19,6 +23,7 @@ import { playBumpClick, playCashRegister } from '../services/sound';
 export default function BillingView({ onBillSettled }) {
   const [bills, setBills] = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
+  const [channelFilter, setChannelFilter] = useState('All');
   const [splitCount, setSplitCount] = useState(2);
   const [splitResult, setSplitResult] = useState(null);
 
@@ -133,28 +138,86 @@ export default function BillingView({ onBillSettled }) {
     window.print();
   };
 
+  const dineInCount = bills.filter(b => b.type === 0).length;
+  const takeawayCount = bills.filter(b => b.type === 1).length;
+  const swiggyCount = bills.filter(b => b.type === 2 && (b.deliveryProvider === 2 || b.deliveryProvider === 'Swiggy')).length;
+  const directCount = bills.filter(b => b.type === 2 && (b.deliveryProvider === 1 || b.deliveryProvider === 'Direct' || b.deliveryProvider === 0 || !b.deliveryProvider)).length;
+
+  const filteredBills = bills.filter(b => {
+    if (channelFilter === 'All') return true;
+    if (channelFilter === 'DineIn') return b.type === 0;
+    if (channelFilter === 'Takeaway') return b.type === 1;
+    if (channelFilter === 'Swiggy') return b.type === 2 && (b.deliveryProvider === 2 || b.deliveryProvider === 'Swiggy');
+    if (channelFilter === 'Direct') return b.type === 2 && (b.deliveryProvider === 1 || b.deliveryProvider === 'Direct' || b.deliveryProvider === 0 || !b.deliveryProvider);
+    return true;
+  });
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 24 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '370px 1fr', gap: 24 }}>
       {/* Left Column: Unpaid Bills List */}
       <div className="pos-cart-panel" style={{ height: 'auto', minHeight: 600 }}>
-        <div className="cart-header">
+        <div className="cart-header" style={{ paddingBottom: 10 }}>
           <div className="cart-title">
             <span>Open Checks</span>
             <span className="nav-badge" style={{ background: 'var(--primary)', color: '#082f49' }}>
               {bills.length} Active
             </span>
           </div>
+
+          {/* Channel Filter Chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 10 }}>
+            <button 
+              type="button"
+              className={`section-chip ${channelFilter === 'All' ? 'active' : ''}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => { setChannelFilter('All'); playBumpClick(); }}
+            >
+              All ({bills.length})
+            </button>
+            <button 
+              type="button"
+              className={`section-chip ${channelFilter === 'DineIn' ? 'active' : ''}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => { setChannelFilter('DineIn'); playBumpClick(); }}
+            >
+              🍽️ Dine ({dineInCount})
+            </button>
+            <button 
+              type="button"
+              className={`section-chip ${channelFilter === 'Takeaway' ? 'active' : ''}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => { setChannelFilter('Takeaway'); playBumpClick(); }}
+            >
+              🥡 Takeaway ({takeawayCount})
+            </button>
+            <button 
+              type="button"
+              className={`section-chip ${channelFilter === 'Swiggy' ? 'active' : ''}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => { setChannelFilter('Swiggy'); playBumpClick(); }}
+            >
+              🛵 Swiggy ({swiggyCount})
+            </button>
+            <button 
+              type="button"
+              className={`section-chip ${channelFilter === 'Direct' ? 'active' : ''}`}
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => { setChannelFilter('Direct'); playBumpClick(); }}
+            >
+              🚚 Direct ({directCount})
+            </button>
+          </div>
         </div>
 
         <div className="cart-items-container">
-          {bills.length === 0 ? (
+          {filteredBills.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-dim)' }}>
               <Receipt size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-              <div>No open checks</div>
-              <div style={{ fontSize: '12px', marginTop: 4 }}>All tables are settled or clear.</div>
+              <div>No open checks found</div>
+              <div style={{ fontSize: '12px', marginTop: 4 }}>No pending orders under "{channelFilter}".</div>
             </div>
           ) : (
-            bills.map(bill => {
+            filteredBills.map(bill => {
               const isSelected = selectedBill?.id === bill.id;
               return (
                 <div 
@@ -171,11 +234,33 @@ export default function BillingView({ onBillSettled }) {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontWeight: 800, color: 'var(--text-white)' }}>{bill.orderNumber}</span>
-                      <span className="ticket-table-badge">Table {bill.table?.tableNumber || 'To-Go'}</span>
+                      {bill.type === 0 && (
+                        <span className="ticket-channel-badge dinein">Table {bill.table?.tableNumber || 'Dine-In'}</span>
+                      )}
+                      {bill.type === 1 && (
+                        <span className="ticket-channel-badge takeaway">
+                          <ShoppingBag size={11} /> Takeaway
+                        </span>
+                      )}
+                      {bill.type === 2 && (bill.deliveryProvider === 2 || bill.deliveryProvider === 'Swiggy') && (
+                        <span className="ticket-channel-badge swiggy">
+                          <Bike size={11} /> Swiggy {bill.channelOrderId ? `(${bill.channelOrderId})` : ''}
+                        </span>
+                      )}
+                      {bill.type === 2 && (bill.deliveryProvider === 1 || bill.deliveryProvider === 'Direct' || bill.deliveryProvider === 0 || !bill.deliveryProvider) && (
+                        <span className="ticket-channel-badge direct">
+                          <Truck size={11} /> Direct Delivery
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-dim)', marginTop: 4 }}>
-                      Guest: {bill.customerName} &bull; {bill.items?.length || 0} items
+                      Guest: <strong>{bill.customerName}</strong> {bill.customerPhone ? `(${bill.customerPhone})` : ''} &bull; {bill.items?.length || 0} items
                     </div>
+                    {bill.deliveryAddress && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <MapPin size={10} color="var(--primary)" /> {bill.deliveryAddress.substring(0, 32)}...
+                      </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
@@ -200,10 +285,15 @@ export default function BillingView({ onBillSettled }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
             <div>
               <div style={{ fontFamily: 'var(--font-family-display)', fontSize: '20px', fontWeight: 800, color: 'var(--text-white)' }}>
-                Check #{selectedBill.orderNumber} &bull; Table {selectedBill.table?.tableNumber || 'To-Go'}
+                Check #{selectedBill.orderNumber} &bull; {selectedBill.type === 0 ? `Table ${selectedBill.table?.tableNumber || 'Dine-In'}` : (selectedBill.type === 1 ? 'Takeaway Order' : ((selectedBill.deliveryProvider === 2 || selectedBill.deliveryProvider === 'Swiggy') ? `Swiggy Delivery ${selectedBill.channelOrderId ? `(${selectedBill.channelOrderId})` : ''}` : 'Direct Delivery'))}
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-dim)', marginTop: 2 }}>
-                Server: Shift Captain Alex &bull; Opened: {new Date(selectedBill.createdAt).toLocaleTimeString()}
+                Guest: <strong>{selectedBill.customerName}</strong> {selectedBill.customerPhone ? `(${selectedBill.customerPhone})` : ''} &bull; Opened: {new Date(selectedBill.createdAt).toLocaleTimeString()}
+                {selectedBill.deliveryAddress && (
+                  <span style={{ marginLeft: 8, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <MapPin size={12} /> {selectedBill.deliveryAddress}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -270,6 +360,12 @@ export default function BillingView({ onBillSettled }) {
               <span>SGST (2.5%)</span>
               <span style={{ fontFamily: 'var(--font-family-mono)' }}>₹{(selectedBill.taxAmount / 2).toFixed(2)}</span>
             </div>
+            {selectedBill.deliveryFee > 0 && (
+              <div className="cart-totals-row">
+                <span>Delivery Charge</span>
+                <span style={{ fontFamily: 'var(--font-family-mono)' }}>₹{selectedBill.deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
             <div className="cart-totals-row grand-total">
               <span>Grand Total</span>
               <span style={{ color: 'var(--accent-emerald)' }}>₹{selectedBill.totalAmount.toFixed(2)}</span>
@@ -510,14 +606,34 @@ export default function BillingView({ onBillSettled }) {
                   <span>TYPE: <b>{receiptData.invoice.orderType}</b></span>
                   <span>TIME: {receiptData.invoice.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
+                {receiptData.invoice.channelOrderId && (
+                  <div className="receipt-row">
+                    <span>PARTNER ID: <b>{receiptData.invoice.channelOrderId}</b></span>
+                    <span>CHANNEL: <b>{receiptData.invoice.deliveryProvider}</b></span>
+                  </div>
+                )}
                 <div className="receipt-row">
-                  <span>TABLE: <b>{receiptData.invoice.table}</b></span>
+                  <span>TABLE / DEST: <b>{receiptData.invoice.table}</b></span>
                   <span>SERVER: {receiptData.invoice.server || 'Captain'}</span>
                 </div>
                 <div className="receipt-row">
                   <span>CASHIER: {receiptData.invoice.cashier || 'Counter 01'}</span>
                   <span>GUEST: {receiptData.invoice.guestName}</span>
                 </div>
+                {receiptData.invoice.customerPhone && (
+                  <div className="receipt-row">
+                    <span>PHONE: <b>{receiptData.invoice.customerPhone}</b></span>
+                    {receiptData.invoice.riderName && (
+                      <span>RIDER: <b>{receiptData.invoice.riderName}</b></span>
+                    )}
+                  </div>
+                )}
+                {receiptData.invoice.deliveryAddress && (
+                  <div className="receipt-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', marginTop: 3 }}>
+                    <span style={{ fontSize: '10px', color: '#4b5563' }}>DELIVERY ADDRESS:</span>
+                    <span style={{ fontWeight: 600, fontSize: '11px' }}>{receiptData.invoice.deliveryAddress}</span>
+                  </div>
+                )}
 
                 <div className="receipt-dashed-line" />
 
@@ -563,6 +679,12 @@ export default function BillingView({ onBillSettled }) {
                   <span>SGST @ 2.5%:</span>
                   <span>₹{(receiptData.summary.sgst ?? (receiptData.summary.tax / 2)).toFixed(2)}</span>
                 </div>
+                {receiptData.summary.deliveryFee > 0 && (
+                  <div className="receipt-row">
+                    <span>Delivery Charge:</span>
+                    <span>₹{receiptData.summary.deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
 
                 <div className="receipt-double-line" />
 

@@ -85,4 +85,5 @@ export const api = {
 
   // Analytics
   getDashboardStats: () => request('/analytics/dashboard'),
+  getReportsData: () => request('/analytics/reports'),
 };

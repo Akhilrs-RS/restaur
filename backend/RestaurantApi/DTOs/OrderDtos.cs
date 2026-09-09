@@ -18,6 +18,14 @@ public class CreateOrderDto
     public string CustomerPhone { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
     public bool IsPriority { get; set; } = false;
+
+    public DeliveryProvider DeliveryProvider { get; set; } = DeliveryProvider.None;
+    public string? DeliveryAddress { get; set; }
+    public decimal DeliveryFee { get; set; } = 0m;
+    public string? ChannelOrderId { get; set; }
+    public string? RiderName { get; set; }
+    public string? RiderPhone { get; set; }
+
     public List<CreateOrderItemDto> Items { get; set; } = new();
 }
 

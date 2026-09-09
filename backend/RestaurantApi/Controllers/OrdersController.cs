@@ -70,12 +70,18 @@ public class OrdersController : ControllerBase
         var order = new Order
         {
             OrderNumber = orderNumber,
-            TableId = dto.TableId,
+            TableId = dto.Type == OrderType.DineIn ? dto.TableId : null,
             Type = dto.Type,
             CustomerName = string.IsNullOrWhiteSpace(dto.CustomerName) ? "Guest" : dto.CustomerName,
             CustomerPhone = dto.CustomerPhone ?? string.Empty,
             Notes = dto.Notes ?? string.Empty,
             IsPriority = dto.IsPriority,
+            DeliveryProvider = dto.DeliveryProvider,
+            DeliveryAddress = dto.DeliveryAddress ?? string.Empty,
+            DeliveryFee = dto.DeliveryFee,
+            ChannelOrderId = dto.ChannelOrderId ?? string.Empty,
+            RiderName = dto.RiderName ?? string.Empty,
+            RiderPhone = dto.RiderPhone ?? string.Empty,
             Status = OrderStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
@@ -147,10 +153,10 @@ public class OrdersController : ControllerBase
         order.SubTotal = subtotal;
         order.TaxAmount = Math.Round(subtotal * 0.05m, 2); // 5% GST (2.5% CGST + 2.5% SGST)
         order.DiscountAmount = 0m;
-        order.TotalAmount = order.SubTotal + order.TaxAmount;
+        order.TotalAmount = order.SubTotal + order.TaxAmount + order.DeliveryFee;
 
         // If DineIn with a table, mark table occupied
-        if (order.TableId.HasValue)
+        if (order.TableId.HasValue && order.Type == OrderType.DineIn)
         {
             var table = await _context.Tables.FindAsync(order.TableId.Value);
             if (table != null)

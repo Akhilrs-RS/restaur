@@ -79,4 +79,40 @@ public class AnalyticsController : ControllerBase
             TopSellingDishes = topDishes
         });
     }
+
+    [HttpGet("reports")]
+    public async Task<IActionResult> GetReportsData()
+    {
+        var today = DateTime.UtcNow.Date;
+        var firstDayOfMonth = new DateTime(today.Year, today.Month, 1);
+        var firstDayOfYear = new DateTime(today.Year, 1, 1);
+
+        var orders = await _context.Orders.ToListAsync();
+        var paidOrders = orders.Where(o => o.Status == OrderStatus.Paid).ToList();
+
+        var dailySales = paidOrders.Where(o => o.CreatedAt >= today).Sum(o => o.TotalAmount);
+        var monthlySales = paidOrders.Where(o => o.CreatedAt >= firstDayOfMonth).Sum(o => o.TotalAmount);
+        var yearlySales = paidOrders.Where(o => o.CreatedAt >= firstDayOfYear).Sum(o => o.TotalAmount);
+
+        // Sales and count by order channel
+        var channelStats = new
+        {
+            DineInRevenue = paidOrders.Where(o => o.Type == OrderType.DineIn).Sum(o => o.TotalAmount),
+            DineInCount = orders.Count(o => o.Type == OrderType.DineIn),
+            TakeawayRevenue = paidOrders.Where(o => o.Type == OrderType.Takeaway).Sum(o => o.TotalAmount),
+            TakeawayCount = orders.Count(o => o.Type == OrderType.Takeaway),
+            SwiggyRevenue = paidOrders.Where(o => o.Type == OrderType.Delivery && o.DeliveryProvider == DeliveryProvider.Swiggy).Sum(o => o.TotalAmount),
+            SwiggyCount = orders.Count(o => o.Type == OrderType.Delivery && o.DeliveryProvider == DeliveryProvider.Swiggy),
+            DirectDeliveryRevenue = paidOrders.Where(o => o.Type == OrderType.Delivery && o.DeliveryProvider == DeliveryProvider.Direct).Sum(o => o.TotalAmount),
+            DirectDeliveryCount = orders.Count(o => o.Type == OrderType.Delivery && o.DeliveryProvider == DeliveryProvider.Direct)
+        };
+
+        return Ok(new
+        {
+            DailySales = dailySales,
+            MonthlySales = monthlySales,
+            YearlySales = yearlySales,
+            ChannelStats = channelStats
+        });
+    }
 }

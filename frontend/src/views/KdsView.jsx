@@ -9,7 +9,11 @@ import {
   Layers, 
   Sparkles,
   RefreshCw,
-  Eye
+  Eye,
+  ShoppingBag,
+  Bike,
+  Truck,
+  MapPin
 } from 'lucide-react';
 import { api } from '../services/api';
 import { playBumpClick } from '../services/sound';
@@ -190,9 +194,28 @@ export default function KdsView({ activeStation = 'Expo' }) {
               <div key={ticket.id} className={`ticket-card ${urgencyClass}`}>
                 {/* Header */}
                 <div className="ticket-header">
-                  <div className="ticket-id-group">
+                  <div className="ticket-id-group" style={{ flexWrap: 'wrap', gap: 6 }}>
                     <span className="ticket-order-num">{ticket.orderNumber}</span>
-                    <span className="ticket-table-badge">{ticket.tableNumber}</span>
+                    {ticket.type === 'DineIn' && (
+                      <span className="ticket-channel-badge dinein">
+                        🍽️ {ticket.tableNumber}
+                      </span>
+                    )}
+                    {ticket.type === 'Takeaway' && (
+                      <span className="ticket-channel-badge takeaway">
+                        <ShoppingBag size={11} /> Takeaway
+                      </span>
+                    )}
+                    {ticket.type === 'Delivery' && ticket.deliveryProvider === 'Swiggy' && (
+                      <span className="ticket-channel-badge swiggy">
+                        <Bike size={11} /> Swiggy {ticket.channelOrderId ? `(${ticket.channelOrderId})` : ''}
+                      </span>
+                    )}
+                    {ticket.type === 'Delivery' && ticket.deliveryProvider !== 'Swiggy' && (
+                      <span className="ticket-channel-badge direct">
+                        <Truck size={11} /> Direct Delivery
+                      </span>
+                    )}
                     {ticket.isPriority && (
                       <span className="nav-badge" style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                         <Sparkles size={11} /> RUSH
@@ -207,9 +230,23 @@ export default function KdsView({ activeStation = 'Expo' }) {
                 </div>
 
                 {/* Meta details */}
-                <div className="ticket-meta-bar">
-                  <span>Guest: {ticket.customerName}</span>
-                  <span>Type: {ticket.type}</span>
+                <div className="ticket-meta-bar" style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Guest: <strong>{ticket.customerName}</strong> {ticket.customerPhone ? `(${ticket.customerPhone})` : ''}</span>
+                    <span style={{ fontWeight: 600 }}>
+                      {ticket.type === 'DineIn' ? 'Dine-In' : (ticket.type === 'Takeaway' ? 'Takeaway' : (ticket.deliveryProvider === 'Swiggy' ? 'Swiggy' : 'Direct'))}
+                    </span>
+                  </div>
+                  {ticket.deliveryAddress && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MapPin size={11} color="var(--primary)" /> {ticket.deliveryAddress}
+                    </div>
+                  )}
+                  {ticket.riderName && (
+                    <div style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                      Rider: {ticket.riderName} {ticket.riderPhone ? `(${ticket.riderPhone})` : ''}
+                    </div>
+                  )}
                 </div>
 
                 {ticket.notes && (

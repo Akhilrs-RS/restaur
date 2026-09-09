@@ -5,6 +5,7 @@ import {
   Package, 
   Receipt, 
   BarChart3, 
+  FileText,
   Wifi
 } from 'lucide-react';
 import { playBumpClick } from '../services/sound';
@@ -15,11 +16,8 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
     <header className="app-header">
       {/* Brand & Status */}
       <div className="brand-section">
-        <div className="brand-logo">
-          <UtensilsCrossed size={22} />
-        </div>
           <div className="brand-name">
-            Royal Spices
+            Royal Spice Resturant
           </div>
       </div>
 
@@ -66,12 +64,20 @@ export default function Navbar({ activeTab, setActiveTab, activeTicketCount, low
           )}
         </button>
 
-        <button 
+        {/* <button 
           className={`nav-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
           onClick={() => { setActiveTab('analytics'); playBumpClick(); }}
         >
           <BarChart3 size={16} />
           Analytics
+        </button> */}
+
+        <button 
+          className={`nav-tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('reports'); playBumpClick(); }}
+        >
+          <FileText size={16} />
+          Reports
         </button>
       </nav>
 
